@@ -40,8 +40,28 @@ const createSlot = (req, res) => {
   res.status(201).json(newSlot);
 };
 
+const deleteSlot = (req, res) => {
+  const id = Number(req.params.id);
+
+  const slotIndex = slots.findIndex((slot) => slot.id === id);
+
+  if (slotIndex === -1) {
+    return res.status(404).json({
+      message: "Slot not found"
+    });
+  }
+
+  const deletedSlot = slots.splice(slotIndex, 1);
+
+  res.status(200).json({
+    message: "Slot deleted successfully",
+    slot: deletedSlot[0]
+  });
+};
+
 module.exports = {
   getSlots,
   getSlotById,
-  createSlot
+  createSlot,
+  deleteSlot
 };

@@ -2,23 +2,18 @@ const express = require("express");
 
 const app = express();
 
-const PORT = 3000;
-
-const slotRoutes = require("./routes/slotRoutes");
-
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
-
-app.use("/slots", slotRoutes);
+app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     message: "Welcome to Slotify API"
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Slotify server running on http://localhost:${PORT}`);
+const slotRoutes = require("./routes/slotRoutes");
+
+app.use("/slots", slotRoutes);
+
+app.listen(3000, () => {
+  console.log("Slotify server running on http://localhost:3000");
 });

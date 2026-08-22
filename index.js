@@ -1,4 +1,6 @@
 const express = require("express");
+const mongoose = require("mongoose");
+require("dotenv").config();
 
 const app = express();
 
@@ -13,6 +15,15 @@ app.get("/", (req, res) => {
 const slotRoutes = require("./routes/slotRoutes");
 
 app.use("/slots", slotRoutes);
+
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("MongoDB connected successfully");
+  })
+  .catch((error) => {
+    console.error("MongoDB connection failed:", error.message);
+  });
 
 app.listen(3000, () => {
   console.log("Slotify server running on http://localhost:3000");

@@ -58,16 +58,54 @@ const createSlot = async (req, res) => {
   }
 };
 
-// DELETE /slots/:id - we will migrate this later
-const deleteSlot = (req, res) => {
-  res.status(501).json({
-    message: "DELETE migration pending"
-  });
-};
+const deleteSlot = async (req, res) => {
+  try {
+    const deletedSlot = await Slot.findByIdAndDelete(req.params.id);
 
+    if (!deletedSlot) {
+      return res.status(404).json({
+        message: "Slot not found"
+      });
+    }
+
+    res.status(200).json({
+      message: "Slot deleted successfully",
+      slot: deletedSlot
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: "Invalid slot ID"
+    });
+  }
+};
+const updateSlot = async (req, res) => {
+  try {
+    const updatedSlot = await Slot.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!updatedSlot) {
+      return res.status(404).json({
+        message: "Slot not found"
+      });
+    }
+
+    res.status(200).json(updatedSlot);
+  } catch (error) {
+    res.status(400).json({
+      message: "Failed to update slot"
+    });
+  }
+};
 module.exports = {
   getSlots,
   getSlotById,
   createSlot,
+  updateSlot,
   deleteSlot
 };

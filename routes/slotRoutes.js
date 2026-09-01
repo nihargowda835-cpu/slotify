@@ -2,6 +2,8 @@ const express = require("express");
 
 const router = express.Router();
 
+const protect=require("../middlewares/authMiddleware");
+
 const {
   getSlots,
   getSlotById,
@@ -14,10 +16,10 @@ router.get("/", getSlots);
 
 router.get("/:id", getSlotById);
 
-router.post("/", createSlot);
+router.post("/", protect, createSlot);
 
 router.put("/:id", updateSlot);
 
-router.delete("/:id", deleteSlot)
+router.delete("/:id",protect, deleteSlot)
 
 module.exports = router;

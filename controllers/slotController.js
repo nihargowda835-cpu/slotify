@@ -3,7 +3,13 @@ const Slot = require("../models/Slot");
 // GET /slots
 const getSlots = async (req, res) => {
   try {
-    const slots = await Slot.find();
+    const filter = {};
+
+    if (req.query.available === "true") {
+      filter.isBooked = false;
+    }
+
+    const slots = await Slot.find(filter);
 
     res.status(200).json(slots);
   } catch (error) {
@@ -32,7 +38,7 @@ const getSlotById = async (req, res) => {
   }
 };
 
-// POST /slots - we will migrate this next
+// POST /slots
 const createSlot = async (req, res) => {
   try {
     const { date, time, duration, isBooked } = req.body;
@@ -40,6 +46,36 @@ const createSlot = async (req, res) => {
     if (!date || !time || !duration) {
       return res.status(400).json({
         message: "date, time and duration are required"
+      });
+    }
+
+    const [hours, minutes] = time.split(":").map(Number);
+
+    const newStart = hours * 60 + minutes;
+    const newEnd = newStart + duration;
+
+    const existingSlots = await Slot.find({ date });
+
+    const hasConflict = existingSlots.some((slot) => {
+      const [existingHours, existingMinutes] = slot.time
+        .split(":")
+        .map(Number);
+
+      const existingStart =
+        existingHours * 60 + existingMinutes;
+
+      const existingEnd =
+        existingStart + slot.duration;
+
+      return (
+        newStart < existingEnd &&
+        newEnd > existingStart
+      );
+    });
+
+    if (hasConflict) {
+      return res.status(409).json({
+        message: "Slot conflicts with an existing slot"
       });
     }
 
@@ -58,26 +94,7 @@ const createSlot = async (req, res) => {
   }
 };
 
-const deleteSlot = async (req, res) => {
-  try {
-    const deletedSlot = await Slot.findByIdAndDelete(req.params.id);
-
-    if (!deletedSlot) {
-      return res.status(404).json({
-        message: "Slot not found"
-      });
-    }
-
-    res.status(200).json({
-      message: "Slot deleted successfully",
-      slot: deletedSlot
-    });
-  } catch (error) {
-    res.status(400).json({
-      message: "Invalid slot ID"
-    });
-  }
-};
+// PUT /slots/:id
 const updateSlot = async (req, res) => {
   try {
     const updatedSlot = await Slot.findByIdAndUpdate(
@@ -103,6 +120,31 @@ const updateSlot = async (req, res) => {
   }
 };
 
+// DELETE /slots/:id
+const deleteSlot = async (req, res) => {
+  try {
+    const deletedSlot = await Slot.findByIdAndDelete(
+      req.params.id
+    );
+
+    if (!deletedSlot) {
+      return res.status(404).json({
+        message: "Slot not found"
+      });
+    }
+
+    res.status(200).json({
+      message: "Slot deleted successfully",
+      slot: deletedSlot
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: "Invalid slot ID"
+    });
+  }
+};
+
+// POST /slots/:id/book
 const bookSlot = async (req, res) => {
   try {
     const slot = await Slot.findById(req.params.id);
@@ -134,11 +176,57 @@ const bookSlot = async (req, res) => {
     });
   }
 };
+
+// POST /slots/:id/cancel
+const cancelBooking = async (req, res) => {
+  try {
+    const slot = await Slot.findById(req.params.id);
+
+    if (!slot) {
+      return res.status(404).json({
+        message: "Slot not found"
+      });
+    }
+
+    if (!slot.isBooked) {
+      return res.status(400).json({
+        message: "Slot is not booked"
+      });
+    }
+
+    if (
+      !slot.bookedBy ||
+      slot.bookedBy.toString() !== req.user.userId
+    ) {
+      return res.status(403).json({
+        message: "You are not allowed to cancel this booking"
+      });
+    }
+
+    slot.isBooked = false;
+    slot.bookedBy = null;
+
+    await slot.save();
+
+    res.status(200).json({
+      message: "Booking cancelled successfully",
+      slot
+    });
+  } catch (error) {
+    console.error("Cancel error:", error.message);
+
+    res.status(400).json({
+      message: "Failed to cancel booking"
+    });
+  }
+};
+
 module.exports = {
   getSlots,
   getSlotById,
   createSlot,
   updateSlot,
   deleteSlot,
-  bookSlot
+  bookSlot,
+  cancelBooking
 };

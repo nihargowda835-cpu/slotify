@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const authRoutes = require("./routes/authRoutes");
+const bookingRoutes=require("./routes/bookingRoutes");
 require("dotenv").config();
 
 const app = express();
@@ -18,6 +19,8 @@ app.get("/", (req, res) => {
 const slotRoutes = require("./routes/slotRoutes");
 
 app.use("/slots", slotRoutes);
+
+app.use("/bookings",bookingRoutes);
 
 mongoose
   .connect(process.env.MONGODB_URI)

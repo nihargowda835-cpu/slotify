@@ -9,7 +9,9 @@ const {
   getSlotById,
   createSlot,
   updateSlot,
-  deleteSlot
+  deleteSlot,
+  bookSlot,
+  cancelBooking
 } = require("../controllers/slotController");
 
 router.get("/", getSlots);
@@ -21,5 +23,9 @@ router.post("/", protect, createSlot);
 router.put("/:id", updateSlot);
 
 router.delete("/:id",protect, deleteSlot)
+
+router.post("/:id/book", protect,bookSlot);
+
+router.post("/:id/cancel",protect,cancelBooking);
 
 module.exports = router;

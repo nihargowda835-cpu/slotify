@@ -194,10 +194,16 @@ const cancelBooking = async (req, res) => {
       });
     }
 
-    if (
-      !slot.bookedBy ||
-      slot.bookedBy.toString() !== req.user.userId
-    ) {
+    if (!slot.bookedBy) {
+      return res.status(400).json({
+        message: "Booking owner not found"
+      });
+    }
+
+    const bookedById = String(slot.bookedBy);
+    const currentUserId = String(req.user.userId);
+
+    if (bookedById !== currentUserId) {
       return res.status(403).json({
         message: "You are not allowed to cancel this booking"
       });
